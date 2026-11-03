@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Worksheet Generator</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__inner">
+      <div class="brand">
+        <span class="brand__mark">AI</span>
+        <div class="brand__text">
+          <span class="brand__title">AI Worksheet Generator</span>
+          <span class="brand__subtitle">Turn pasted LMS content into a formatted academic worksheet</span>
+        </div>
+      </div>
+      <div class="navbar__status" id="apiStatus" title="Backend connection status">
+        <span class="status-dot" id="apiStatusDot"></span>
+        <span id="apiStatusText">Checking backend…</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <!-- ============ PROFILE CARD ============ -->
+    <section class="card" id="profileCard">
+      <div class="card__header">
+        <h2>Student Profile</h2>
+        <p class="card__hint">Saved once on this device — auto-filled into every worksheet.</p>
+      </div>
+
+      <div id="profileDisplay" class="profile-display hidden">
+        <div class="profile-grid">
+          <div class="profile-grid__item"><span class="label">Name</span><span id="displayName" class="value"></span></div>
+          <div class="profile-grid__item"><span class="label">UID</span><span id="displayUid" class="value"></span></div>
+          <div class="profile-grid__item"><span class="label">Class</span><span id="displayClass" class="value"></span></div>
+        </div>
+        <button class="btn btn--ghost" id="editProfileBtn" type="button">Edit Profile</button>
+      </div>
+
+      <form id="profileForm" class="form-grid">
+        <div class="field">
+          <label for="profileName">Full Name</label>
+          <input type="text" id="profileName" placeholder="e.g. Arjoo" value="Arjoo" required />
+        </div>
+        <div class="field">
+          <label for="profileUid">UID</label>
+          <input type="text" id="profileUid" placeholder="e.g. 25MCA20267" value="25MCA20267" required />
+        </div>
+        <div class="field">
+          <label for="profileClass">Class</label>
+          <input type="text" id="profileClass" placeholder="e.g. 25MCA-2[A]" required />
+        </div>
+        <div class="field field--action">
+          <button type="submit" class="btn btn--primary">Save Profile</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============ WORKSHEET DETAILS + CONTENT CARD ============ -->
+    <section class="card">
+      <div class="card__header">
+        <h2>Worksheet Details</h2>
+        <p class="card__hint">Subject, Subject Code and Date, plus how long you'd like the worksheet to be.</p>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="subject">Subject</label>
+          <input type="text" id="subject" placeholder="e.g. Backend Technologies" />
+        </div>
+        <div class="field">
+          <label for="subjectCode">Subject Code</label>
+          <input type="text" id="subjectCode" placeholder="e.g. 25CAH-706" />
+        </div>
+        <div class="field">
+          <label for="worksheetDate">Date</label>
+          <input type="date" id="worksheetDate" />
+        </div>
+        <div class="field">
+          <label for="experimentNumber">Experiment No.</label>
+          <input type="text" id="experimentNumber" placeholder="Auto" />
+        </div>
+        <div class="field">
+          <label for="branch">Branch</label>
+          <input type="text" id="branch" placeholder="e.g. MCA" />
+        </div>
+        <div class="field">
+          <label for="sectionGroup">Section/Group</label>
+          <input type="text" id="sectionGroup" placeholder="e.g. 25MCA-2[A]" value="25MCA-2[A]" />
+        </div>
+        <div class="field">
+          <label for="semester">Semester</label>
+          <input type="text" id="semester" placeholder="e.g. 3rd" value="3rd" />
+        </div>
+
+        <div class="field field--wide">
+          <label>Number of Pages</label>
+          <div class="segmented" id="pageCountSegmented" role="radiogroup" aria-label="Number of pages">
+            <button type="button" class="segmented__option" data-pages="2">2 Pages</button>
+            <button type="button" class="segmented__option" data-pages="3">3 Pages</button>
+            <button type="button" class="segmented__option segmented__option--active" data-pages="4">4 Pages</button>
+            <button type="button" class="segmented__option" data-pages="5">5 Pages</button>
+            <button type="button" class="segmented__option" data-pages="6">6 Pages</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card__header card__header--tight">
+        <h3>LMS Content</h3>
+        <p class="card__hint">Paste the raw content copied from your Chandigarh University LMS page.</p>
+      </div>
+
+      <div class="field">
+        <textarea id="rawContent" rows="10" placeholder="Paste your LMS content here…"></textarea>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn--ghost" id="clearBtn">Clear</button>
+        <button type="button" class="btn btn--primary btn--lg" id="generateBtn">
+          <span id="generateBtnLabel">Generate Worksheet</span>
+        </button>
+      </div>
+
+      <div id="progressPanel" class="progress-panel hidden">
+        <div class="spinner" aria-hidden="true"></div>
+        <span id="progressText">Analyzing LMS content…</span>
+      </div>
+
+      <div id="errorPanel" class="alert alert--error hidden" role="alert"></div>
+    </section>
+
+    <!-- ============ PREVIEW / EDIT CARD ============ -->
+    <section class="card hidden" id="previewCard">
+      <div class="card__header">
+        <h2>Preview &amp; Edit</h2>
+        <p class="card__hint">Review the AI-structured content below. Edit any field before generating your files.</p>
+      </div>
+
+      <div class="preview-doc" id="previewDoc">
+        <div class="preview-doc__masthead">
+          <strong>Chandigarh University</strong>
+          <span>Department of Computer Science &amp; Engineering</span>
+        </div>
+        <h3 id="previewTitle" class="preview-doc__title">Experiment Title</h3>
+        <div class="preview-doc__meta">
+          <span id="previewMetaSubject"></span>
+          <span id="previewMetaName"></span>
+          <span id="previewMetaDate"></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="editTitle">Experiment Title</label>
+        <input type="text" id="editTitle" />
+      </div>
+      <div class="field">
+        <label for="editAim">Aim</label>
+        <textarea id="editAim" rows="2"></textarea>
+      </div>
+      <div class="field">
+        <label for="editObjectives">Objectives <span class="field__note">(one per line)</span></label>
+        <textarea id="editObjectives" rows="3"></textarea>
+      </div>
+      <div class="field">
+        <label for="editInput">Input <span class="field__note">(one per line)</span></label>
+        <textarea id="editInput" rows="2"></textarea>
+      </div>
+      <div class="field">
+        <label for="editApparatus">Apparatus Used <span class="field__note">(one per line)</span></label>
+        <textarea id="editApparatus" rows="2"></textarea>
+      </div>
+      <div class="field">
+        <label for="editCode">Code <span class="field__note">(as it will appear — preserve indentation)</span></label>
+        <textarea id="editCode" rows="8" class="mono"></textarea>
+      </div>
+      <div class="field">
+        <label for="editOutput">Output</label>
+        <textarea id="editOutput" rows="2"></textarea>
+      </div>
+      <div class="field">
+        <label for="editLearningOutcomes">Learning Outcomes <span class="field__note">(one per line)</span></label>
+        <textarea id="editLearningOutcomes" rows="3"></textarea>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn--ghost" id="regenerateBtn">Regenerate</button>
+        <button type="button" class="btn btn--primary" id="createFilesBtn">Create Word &amp; PDF</button>
+      </div>
+    </section>
+
+    <!-- ============ RESULT CARD ============ -->
+    <section class="card hidden" id="resultCard">
+      <div class="result-banner">
+        <span class="result-banner__check">✓</span>
+        <span>Worksheet Generated Successfully</span>
+      </div>
+
+      <div class="profile-grid">
+        <div class="profile-grid__item"><span class="label">Pages</span><span id="resultPages" class="value"></span></div>
+        <div class="profile-grid__item"><span class="label">Subject</span><span id="resultSubject" class="value"></span></div>
+        <div class="profile-grid__item"><span class="label">Subject Code</span><span id="resultSubjectCode" class="value"></span></div>
+        <div class="profile-grid__item"><span class="label">Date</span><span id="resultDate" class="value"></span></div>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn--outline" id="downloadDocxBtn">⬇ Download DOCX</button>
+        <button type="button" class="btn btn--outline" id="downloadPdfBtn">⬇ Download PDF</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <span>AI Worksheet Generator · runs locally against your own backend and AI provider</span>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
